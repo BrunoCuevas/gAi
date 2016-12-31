@@ -15,6 +15,19 @@ class selection():
 			fitnessVector[eliteInstance] = 1e9; # This could lead to fail
 			elite.append(population[eliteInstance]);
 		return elite;
+	def elitismOverPicture(self, population, elitSize, canvas, iZ):
+		import fitness as F;
+		import numpy as np;
+		popSize = len(population);
+		fitnessVector = np.zeros(len(population));
+		elite = [];
+		for iter in range(popSize):
+			fitnessVector[iter] = self.__evaluator.evaluateIndividualOverPicture(population[iter], canvas, iZ);
+		for iter in range(elitSize):
+			eliteInstance = fitnessVector.argmin();
+			fitnessVector[eliteInstance] = 1e9;
+			elite.append(population[eliteInstance]);
+		return elite;
 	def tournament(self, population, size, finalistsSize):
 		import fitness as F;
 		import numpy as np;
@@ -36,6 +49,28 @@ class selection():
 				winner = term[matchPoints.argmin()];
 				loser = term[matchPoints.argmax()];
 			finalist.append(population[winner]);
+		return finalist;	
+	def tournamentOverPicture(self, population, size, finalistsSize, canvas, iZ):
+		import fitness as F;
+		import numpy as np;
+		#
+		finalist = list();
+		popSize = len(population);
+		for iter in range(finalistsSize):
+			term = np.array([0,0]);
+			term[0] = np.random.randint(0, high=popSize, size=1);	
+			term[1] = np.random.randint(0, high=popSize, size=1);
+			matchPoints = np.array([0,0]);
+			matchPoints[0]= self.__evaluator.evaluateIndividualOverPicture(population[term[0]], canvas, iZ);
+			matchPoints[1]= self.__evaluator.evaluateIndividualOverPicture(population[term[1]], canvas, iZ);
+			winner = term[matchPoints.argmin()];
+			loser = term[matchPoints.argmax()];
+			for iter in range(size - 1):
+				term[matchPoints.argmax()] = np.random.randint(0, high=popSize,size=1);
+				matchPoints[matchPoints.argmax()] = self.__evaluator.evaluateIndividualOverPicture(population[term[matchPoints.argmax()]], canvas, iZ);
+				winner = term[matchPoints.argmin()];
+				loser = term[matchPoints.argmax()];
+			finalist.append(population[winner]);
 		return finalist;
 	def parka(self, population, finalistsSize, newbies):
 		import numpy as np;
@@ -46,7 +81,7 @@ class selection():
 			population[deathChossen] = newbies[counter];
 			popSize = len(population);
 			counter = counter + 1;
-		return population;
+		return population;	
 	def adaptativeMutation (self, stackCounter, maxRate, maxChr):
 		import math;
 		rate = (maxRate/(1+(math.exp(-0.5*stackCounter - 500))));
