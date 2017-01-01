@@ -6,6 +6,8 @@ import chromosome as C;
 import selection as S;
 import fitness as F;
 import sys;
+import time as TT;
+start = TT.time();
 #	Input arguments
 try:
 	outputfile = sys.argv[6];
@@ -18,9 +20,9 @@ populationSize = int(sys.argv[3]);
 time = int(sys.argv[4]);
 seed = int(sys.argv[5]);
 fileOut = open(outputfile+ '.dat', 'w+');
-fileOut.write("iChr\tIteration\tMin\tMean\tStackment\n");
+fileOut.write("Time\tMin\n");
 fileOut.close();
-fileOut = open(outputfile, 'ab');
+fileOut = open(outputfile+ '.dat', 'ab');
 #	Creating population
 f = F.fitness(inpath);
 s = S.selection(inpath);
@@ -35,14 +37,25 @@ for iter in range(populationSize):
 print("iteration\tmin\tmean");
 stackCounter = 0;
 oldFitness = 1e10;
+counter = 0;
+timeCounter = 0;
+lStart = TT.time();
 for iChr in range(deepness):
 	print("Working in {0}".format(iChr));
+	counter = counter + 1;
 	iT = 0;
 	oldFitness = 1e10;
 	while stackCounter < 300:
 		# parents that had sex
-		population = s.elitism(population, 5);
-		for iter in range(10):
+		population = s.elitism(population, populationSize - 10);
+		if TT.time() - start > (30*60):
+			break;
+		if TT.time() - lStart > 100:
+			timeCounter = timeCounter + 1;
+			lStart = TT.time();
+			row2save = np.array([timeCounter*100, oldFitness]);
+			np.savetxt(fileOut, row2save.reshape(1,-1), fmt="%10.2f", delimiter="\t");
+		for iter in range(5):
 			pTHS = s.tournament(population, 4, 2);
 			if len(pTHS) == 2:
 				i1 = pTHS[0];
@@ -64,14 +77,15 @@ for iChr in range(deepness):
 			else:
 				stackCounter = 0;
 				oldFitness = fitnessControl.min();
-			row2write = np.array([iChr, iT, fitnessControl.min(), np.mean(fitnessControl), stackCounter]);
-			np.savetxt(fileOut, row2write.reshape(1,-1), fmt="%10.2f", delimiter="\t");
 			f.plotForgedImage(population[fitnessControl.argmin()], "{0}_{1}".format(outputfile, iChr), fitnessControl.min())
 		iT = iT + 1;
 	stackCounter = 0;
 	fI = population[fitnessControl.argmin()].copyIndividual();
 	del population;
 	population = [];
+	end = TT.time();
+	if end - start > (30*60):
+		continue;
 	for iP in range(populationSize):
 		chrList = [];
 		chrList = fI.getAllGeneticMaterial();
@@ -79,11 +93,18 @@ for iChr in range(deepness):
 		ind = I.individual(iChr + 2);
 		ind.includeInformation(chrList);
 		population.append(ind);
-fileOut.close();
 # Second Step. Profiling.
 father = fI.copyIndividual();
 oldFitness = f.evaluateIndividual(father);
 for iter in range(time):
+	end = TT.time();
+	if (end - start) > (30*60):
+		break;
+	if TT.time() - lStart > 100 :
+		timeCounter = timeCounter + 1;
+		lStart = TT.time()
+		row2save = np.array([timeCounter*100, oldFitness]);
+		np.savetxt(fileOut, row2save.reshape(1,-1), fmt="%10.2f", delimiter="\t");
 	son = father.copyIndividual();
 	son.mutate(0.05, 2);
 	newFitness = f.evaluateIndividual(son);
@@ -91,4 +112,7 @@ for iter in range(time):
 		father = son;
 		oldFitness = newFitness;
 		f.plotForgedImage(father, "Finalist", oldFitness);
+	row2write = np.array([iter, oldFitness]);
+	np.savetxt(fileOut, row2write.reshape(1,-1), fmt="%10.2f", delimiter="\t");
 
+fileOut.close();

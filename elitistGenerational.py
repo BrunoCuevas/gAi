@@ -6,6 +6,8 @@ import chromosome as C;
 import selection as S;
 import fitness as F;
 import sys;
+import time as TT;
+start = TT.time();
 #	Input arguments
 try:
 	outputfile = sys.argv[6];
@@ -17,6 +19,12 @@ deepness = int(sys.argv[2]);
 populationSize = int(sys.argv[3]);
 time = int(sys.argv[4]);
 seed = int(sys.argv[5]);
+
+fileOut = open(outputfile+ '.dat', 'w+');
+fileOut.write("Time\tMin\n");
+fileOut.close();
+fileOut = open(outputfile+ '.dat', 'ab');
+
 #	Creating population
 f = F.fitness(inpath);
 s = S.selection(inpath);
@@ -33,10 +41,19 @@ for iter in range(populationSize):
 print("iteration\tmin\tmean");
 stackCounter = 0;
 oldFitness = 1e10;
+lStart = TT.time();
+timeCounter = 0;
 for iT in range(time):
 	# parents that had sex
-	population = s.elitism(population, 5);
-	for iter in range(10):
+	if TT.time() - start > (30*60):
+		break;
+	if TT.time() - lStart > 100:
+		timeCounter = timeCounter + 1;
+		lStart = TT.time();
+		row2save = np.array([timeCounter*100, oldFitness]);
+		np.savetxt(fileOut, row2save.reshape(1,-1), fmt="%10.2f", delimiter="\t");
+	population = s.elitism(population, populationSize - 10);
+	for iter in range(5):
 		pTHS = s.tournament(population, 4, 2);
 		mutationRate, chromRate = s.adaptativeMutation(stackCounter, 0.1, 8);
 		if len(pTHS) == 2:
@@ -59,6 +76,4 @@ for iT in range(time):
 		else:
 			stackCounter = 0;
 		f.plotForgedImage(population[fitnessControl.argmin()], "{0}_{1}".format(outputfile, iT), fitnessControl.min())
-
-
-
+fileOut.close();

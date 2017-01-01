@@ -6,6 +6,8 @@ import chromosome as C;
 import selection as S;
 import fitness as F;
 import sys;
+import time as TT;
+start = TT.time();
 #
 #	Input arguments
 #
@@ -19,13 +21,11 @@ deepness = int(sys.argv[2]);
 populationSize = int(sys.argv[3]);
 time = int(sys.argv[4]);
 seed = int(sys.argv[5]);
-#
-#	Creating log File
-#
-
-#
-#	Creating population
-#
+fileOut = open(outputfile+ '.dat', 'w+');
+fileOut.write("Time\tMin\n");
+fileOut.close();
+fileOut = open(outputfile+ '.dat', 'ab');
+#	Creating population#
 f = F.fitness(inpath);
 s = S.selection(inpath);
 population = [];
@@ -37,12 +37,20 @@ for iter in range(populationSize):
 	ind = I.individual(deepness);
 	ind.includeInformation(chrList);
 	population.append(ind)
-#
-#	Evolution simulation
-#
+lStart = TT.time();
+timeCounter = 0;
+olfFitness = 1e10;
 print("iteration\tmin\tmean");
 for iT in range(time):
 	# parents that had sex
+	if TT.time() - start > (30*60):
+		break;
+	if TT.time() - lStart > 100:
+		timeCounter = timeCounter + 1;
+		lStart = TT.time();
+		row2save = np.array([timeCounter*100, oldFitness]);
+		np.savetxt(fileOut, row2save.reshape(1,-1), fmt="%10.2f", delimiter="\t");
+
 	pTHS = s.tournament(population, 4, 2);
 	if len(pTHS) == 2:
 		i1 = pTHS[0];
@@ -58,4 +66,6 @@ for iT in range(time):
 		fitnessControl = np.array(fitnessControl);
 		print("{0}".format(iT), end="\t");
 		print("{0}\t{1}".format(fitnessControl.min(), np.mean(fitnessControl)));
+		oldFitness = fitnessControl.min();
 		f.plotForgedImage(population[fitnessControl.argmin()], "{0}_{1}".format(outputfile, iT), fitnessControl.min())
+fileOut.close();
