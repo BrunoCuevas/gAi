@@ -50,7 +50,7 @@ for iT in range(time):
 	if TT.time() - lStart > 100:
 		timeCounter = timeCounter + 1;
 		lStart = TT.time();
-		row2save = np.array([timeCounter*100, oldFitness]);
+		row2save = np.array([timeCounter*100, fitnessControl.min()]);
 		np.savetxt(fileOut, row2save.reshape(1,-1), fmt="%10.2f", delimiter="\t");
 	population = s.elitism(population, populationSize - 10);
 	for iter in range(5):
@@ -75,5 +75,6 @@ for iT in range(time):
 			stackCounter = stackCounter + 1000;
 		else:
 			stackCounter = 0;
+			oldFitness = fitnessControl.min();
 		f.plotForgedImage(population[fitnessControl.argmin()], "{0}_{1}".format(outputfile, iT), fitnessControl.min())
 fileOut.close();

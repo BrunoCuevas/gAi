@@ -85,7 +85,7 @@ for iChr in range(deepness):
 	population = [];
 	end = TT.time();
 	if end - start > (30*60):
-		continue;
+		break;
 	for iP in range(populationSize):
 		chrList = [];
 		chrList = fI.getAllGeneticMaterial();
@@ -112,7 +112,7 @@ for iter in range(time):
 		father = son;
 		oldFitness = newFitness;
 		f.plotForgedImage(father, "Finalist", oldFitness);
-	row2write = np.array([iter, oldFitness]);
-	np.savetxt(fileOut, row2write.reshape(1,-1), fmt="%10.2f", delimiter="\t");
+	#row2write = np.array([iter, oldFitness]);
+	#np.savetxt(fileOut, row2write.reshape(1,-1), fmt="%10.2f", delimiter="\t");
 
 fileOut.close();
